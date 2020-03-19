@@ -1,0 +1,16 @@
+[submodule "traefik"]
+	path = traefik
+	url = git@github.com:ermil/traefik_docker_conf.git
+	branch = master
+[submodule "fail2ban"]
+	path = fail2ban
+	url = git@github.com:ermil/fail2ban_docker_conf.git
+	branch = master
+[submodule "domaine1"]
+	path = domaine1
+	url = git@github.com:ermil/wordpress_docker_conf.git
+	branch = master
+[submodule "domaine2"]
+	path = domaine2
+	url = git@github.com:ermil/wordpress_docker_conf.git
+	branch = master
