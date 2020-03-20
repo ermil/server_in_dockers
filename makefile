@@ -1,8 +1,9 @@
 # Liste des cibles disponibles dans les sous-répertoires
 GLOBAL_TARGETS := init
-TARGETS := up stop down backup update 
+TARGETS := up stop down backup update
+EMPTY_DIRS := $(subst ./,,$(shell find . -maxdepth 1  -type d -empty -exec echo {}/. \;))
 # Liste de tous les répertoires
-SUBDIRS := $(filter-out backup/. .git/.,$(wildcard */.))
+SUBDIRS := $(filter-out backup/. .git/. $(EMPTY_DIRS),$(wildcard */.))
 
 global_init:
 	if [ "$$(systemctl is-active docker)" != active ]; then sudo systemctl start docker.service; else echo "docker already running"; fi

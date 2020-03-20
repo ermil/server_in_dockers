@@ -1,6 +1,6 @@
 #+TITLE:   Mon serveur avec des dockers le plus générique possible
 
-J'ai plusieurs de mes proches qui avaient besoin de sites web. Je les ai donc aidé en m'occupant de mettre en place l'infrastructure nécessaire sur le serveur. Comme ils ont des projets distincts, j'ai voulu rendre le plus générique possible l'architecture pour que ce soit facile pour moi à maintenir et pouvoir réutiliser les même dockers pour les même services. Ce répertoire est donc un exemple de mon architecture avec les différents dockers que j'ai développé jusqu'à maintenant. 
+J'ai plusieurs de mes proches qui avaient besoin de sites web. Je les ai donc aidé en m'occupant de mettre en place l'infrastructure nécessaire sur un serveur. Comme ils ont des projets distincts, j'ai voulu rendre l'architecture le plus générique possible pour que ce soit facile pour moi à maintenir et pouvoir réutiliser les même dockers pour les même services. Ce répertoire est donc un exemple de mon architecture avec les différents dockers que j'ai développé jusqu'à maintenant. 
 - Traefik :: qui permet d'acheminer les requêtes http et https vers les différents sites web.
 - Fail2Ban :: qui permet de sécuriser l'accès au serveur.
 - Wordpress :: pour faire des sites web.
@@ -13,21 +13,30 @@ Le makefile est pratique puisqu'il permet de transmettres les différentes actio
 make <action>
 #+end_src
 Où les différentes actions correspondent à 
-- init :: Création du network et démarrage du daemon docker si nécessaire. 
+- init :: Création du network et démarrage du daemon docker si nécessaire, autres permissions des fichiers qui doivent être réalisées dans chacun des sous-répertoire.
 - up :: démarrage ou redémarrage des dockers.
 - stop :: Arrêt des dockers, sans les retirer.
-- down :: Arrêt des dockers et retrait des contenuers, réseaux, volumes et images créees par up.
+- down :: Arrêt des dockers et retrait des conteneurs, réseaux, volumes et images créees par up.
 - update :: télécharge une nouvelle image des différents services si disponible.
 - backup :: Fait une archive avec les différents fichiers nécessaires pour retrouver l'état actuel du conteneur.
+
+Ce makefile ne fait qu'appeller chacun des makefile dans les sous-répertoires présents, ce qui permet que les actions soient adaptées de manière spécifique à chacun de ceux-ci. Un sous-répertoire vide (par exemple un submodule pas initialisé) est ignoré.
 ** Initialisation des submodules
-Lors d'un clone, pour initialiser les submodules, il faut charger les submodules.
+Lors d'un clône, les sous-modules sont vides. Pour les télécharger, il faut utiliser les commandes ~git submodule init~ et ~git submodule update~. Toutefois, les noms génériques ~domaine1~ et ~domaine2~, ne sont pas très pratique pour la gestion des dockers. Il serait préférable de les conserver pour que le projet publique soit le même projet, mais d'ajouter des sous-modules avec des noms plus significatifs pour mes propres projets tout en les conservant privé et local. La manière la plus simple que j'ai trouvé est donc de retirer ces sous-modules de l'index et de les ignorer. Ils ne sont pas suivi explicitement, mais la fonctionnalité des sous-modules est préservée et ils sont poussés de manière indépendante vers leurs remotes respectifs. Il n'est toutefois pas possible de relier leur état aux différents commits/branches dans le répertoire. C'est un désagrément minime puisque le répertoire est tellement simple et ne sert qu'à contenir ces sous-modules. Les commandes nécessaires à réaliser pour une telle initialisation sont:
+
 #+begin_src 
-git submodule init
+git submodule init -- traefik fail2ban
+git submodule add git@github.com:ermil/wordpress_docker_conf.git <true_domain_name>
+git submodule add git@github.com:ermil/wordpress_docker_conf.git <true_domain_name2>
+git rm --cached <true_domain_name> <true_domain_name2>
+echo '<true_domain_name>' >> .gitignore 
+echo '<true_domain_name2>' >> .gitignore 
+echo '.gitignore' >> .gitignore 
 git submodule update
 #+end_src
 
-** Flow git
-Afin de partager mes projets et pouvoir les réutiliser pour différents serveurs, je partage qu'une version générique. Afin de la maintenir à jour à partir de ma configuration spécifique que j'utilise sur mon serveur, je définis un /merge driver/ qui permet de toujours conserver la version de la branche d'un fichier. Je définis donc des configurations génériques sur une branche et mes configurations spécifiques sur les branches de développement et production. Le ficher [[.gitattributes]] permet de définir chacun des fichiers qui doivent utiliser ce /merge driver/ de manière à ce que chaque branche ait ses versions spécifiques des fichiers. La commande suivante crée le /merge driver/ au niveau du projet ou dans la configuration du système avec l'option --global.
+** Flow git dans les sous modules
+Afin de partager mes projets et pouvoir les réutiliser pour différents serveurs, je ne partage qu'une version générique. Afin de la maintenir à jour, à partir de ma configuration spécifique, que j'utilise sur mon serveur, je définis un /merge driver/ qui permet de toujours conserver la version de certains fichiers présent sur la branche lors d'un merge. Je définis donc des configurations génériques sur une branche et mes configurations spécifiques sur les branches de développement et production. Le ficher [[.gitattributes]] permet de définir chacun des fichiers qui doivent utiliser ce /merge driver/ de manière à ce que chaque branche ait ses versions spécifiques de ces fichiers. La commande suivante crée le /merge driver/ au niveau du projet ou dans la configuration du système avec l'option --global.
 #+begin_src
 git config [--global] merge.ours.driver true
 #+end_src
